@@ -1,0 +1,63 @@
+{{ define "header" }}
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <title>graphiti.me</title>
+
+  <link href="../static/css/materialize.min.css" rel="stylesheet">
+  <link href="../static/css/style.css" rel="stylesheet">
+  <link href="../static/css/materialize-tags.css" rel="stylesheet">
+  <link href="../static/img/favicon.ico?v=3" rel="shortcut icon" type="image/x-icon" />
+  <link href="https://fonts.googleapis.com/css?family=Molle:400i" rel="stylesheet"> 
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+<ul id='menubar' class='dropdown-content' style='width: inherit;'>
+  <!-- <li><a href="/preferences">Preferences</a></li>
+  <li><a href="/logout">Logout</a></li>
+  <li class="divider"></li>
+  <li><a href="mailto:gripe@taskly.xyz?Subject=My%20Annoying%20Bug
+      &body=Operating System: %0D%0A
+      Browser: %0D%0A
+      Location/Timezone: %0D%0A
+      Issue: ">File bug report</a></li>
+  <li><a id="version">graphiti.me 0.0.1g</a></li>
+    -->
+</ul>
+
+<nav class="orange accent-4">
+  <div class="container">
+    <div class="nav-wrapper">
+        
+      {{ if .LoggedIn }}
+        <a class="brand-logo title" href="/tags">GRAPHITI.ME</a>
+      {{ else }}
+        <a class="brand-logo title" href="/">GRAPHITI.ME</a>
+      {{ end }}
+      <!--
+      <ul id="nav-mobile" class="right">
+        {{ if .LoggedIn }}
+          {{ if eq (.Page) (1) }}
+            <li><a href="#" id="create-task-btn-header"><i class="material-icons">add</i></a></li>
+          {{ end }}
+          <li><a class='dropdown-button' href='#' data-constrainwidth='false'
+            data-activates='menubar'><i class="material-icons">more_vert</i></a></li>
+        {{ else }}
+          <li><a class="waves-effect waves-light btn" href="/auth">Login</a></li>
+        {{ end }}
+      -->
+      </ul>
+    </div>
+  </div>
+</nav>
+{{ end }}
+

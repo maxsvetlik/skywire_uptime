@@ -1,0 +1,12 @@
+{{ define "footer" }}
+  <script src="../static/js/materialize.min.js"></script>
+  <script src="../static/js/materialize-tags.js"></script>
+
+  {{ if ne .Message "" }}
+    <script>
+    $(document).ready(function() {
+      Materialize.toast({{.Message}}, 5000);
+    });
+    </script>
+  {{ end }}
+{{ end }}

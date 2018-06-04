@@ -1,0 +1,118 @@
+html {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"
+}
+
+@font-face {
+    font-family: TagType;
+    src: url(../fonts/tagtype/tagtype.tff);
+}
+
+html, body, .center-box {
+    height: 100%
+}
+
+.vcenter {
+  min-height: 75%;  /* Fallback for browsers do NOT support vh unit */
+  min-height: 75vh;  /* Adjustments for the header height?          */
+}
+
+.home-info-card {
+  min-height: 310px;
+}
+
+@media (max-width: 992px) {
+  nav .brand-logo {
+    margin-left: 0px !important;
+  }
+  .container {
+    /*margin: 0;*/
+  }
+
+  #center-card {
+    min-height: inherit;
+  }
+
+  .home-info-card {
+    min-height: inherit;
+  }
+}
+
+#time-show-dropdown {
+  color: black;
+}
+
+.dropdown-form li {
+  min-height: 0px;
+  line-height: 2.5;
+  padding: 10px;
+}
+
+.dropdown-content a {
+  font-size: 14px !important;
+  padding: 10px 16px !important;
+}
+
+.dropdown-content li {
+  min-height: 0px !important;
+}
+
+.helper {
+  font-style: italic;
+  color: grey !important;
+  font-size: 12px;
+}
+
+.header-caption {
+  top: 10%;
+  text-align: center;
+}
+
+#empty-list {
+  border: none;
+}
+
+.collection-item .title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.intro {
+  font-family: TagType;
+}
+
+.headings {
+  font-family: Molle
+}
+
+nav .brand-logo {
+  margin-left: 20px;
+  font-family: TagType;
+}
+
+#version {
+  color: grey;
+}
+
+#version:hover {
+  background-color: white;
+  cursor: default;
+}
+
+code {
+  background-color: rgba(211, 211, 211, 0.6);
+  border-radius: 3px;
+  padding: 2px;
+}
+
+.btn-flat:hover {
+  background-color: rgba(0,0,0,0.1);
+  box-shadow: none;
+}
+
+.input-field .prefix {
+  line-height: inherit;
+}
+
+.input-field .prefix.active {
+  color: rgba(0, 0, 0, 0.5);
+}
