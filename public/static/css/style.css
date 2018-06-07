@@ -3,8 +3,8 @@ html {
 }
 
 @font-face {
-    font-family: TagType;
-    src: url(../fonts/tagtype/tagtype.tff);
+    font-family: Mexcellent;
+    src: url(../fonts/mexcellent/mexcellent_3d.tff);
 }
 
 html, body, .center-box {
@@ -77,7 +77,7 @@ html, body, .center-box {
 }
 
 .intro {
-  font-family: TagType;
+  font-family: Roboto;
 }
 
 .headings {
@@ -85,8 +85,8 @@ html, body, .center-box {
 }
 
 nav .brand-logo {
-  margin-left: 20px;
-  font-family: TagType;
+  margin-left: 50px;
+  font-family: Mexcellent;
 }
 
 #version {

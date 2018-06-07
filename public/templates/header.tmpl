@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-  <title>graphiti.me</title>
+  <title>SkyStats</title>
 
   <link href="../static/css/materialize.min.css" rel="stylesheet">
   <link href="../static/css/style.css" rel="stylesheet">
@@ -22,16 +22,6 @@
 </head>
 
 <ul id='menubar' class='dropdown-content' style='width: inherit;'>
-  <!-- <li><a href="/preferences">Preferences</a></li>
-  <li><a href="/logout">Logout</a></li>
-  <li class="divider"></li>
-  <li><a href="mailto:gripe@taskly.xyz?Subject=My%20Annoying%20Bug
-      &body=Operating System: %0D%0A
-      Browser: %0D%0A
-      Location/Timezone: %0D%0A
-      Issue: ">File bug report</a></li>
-  <li><a id="version">graphiti.me 0.0.1g</a></li>
-    -->
 </ul>
 
 <nav class="orange accent-4">
@@ -39,22 +29,10 @@
     <div class="nav-wrapper">
         
       {{ if .LoggedIn }}
-        <a class="brand-logo title" href="/tags">GRAPHITI.ME</a>
+        <a class="brand-logo title" href="/tags">Sky Stats</a>
       {{ else }}
-        <a class="brand-logo title" href="/">GRAPHITI.ME</a>
+        <a class="brand-logo title" href="/">Sky Stats</a>
       {{ end }}
-      <!--
-      <ul id="nav-mobile" class="right">
-        {{ if .LoggedIn }}
-          {{ if eq (.Page) (1) }}
-            <li><a href="#" id="create-task-btn-header"><i class="material-icons">add</i></a></li>
-          {{ end }}
-          <li><a class='dropdown-button' href='#' data-constrainwidth='false'
-            data-activates='menubar'><i class="material-icons">more_vert</i></a></li>
-        {{ else }}
-          <li><a class="waves-effect waves-light btn" href="/auth">Login</a></li>
-        {{ end }}
-      -->
       </ul>
     </div>
   </div>

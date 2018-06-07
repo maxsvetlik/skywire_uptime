@@ -1,28 +1,16 @@
-package main
+package scrape
 
 import (
 	"fmt"
-	"os"
+	//"io/ioutil"
 	"time"
 
 	"github.com/tebeka/selenium"
+	node "skywire_uptime/node"
 )
 
-// This example shows how to navigate to a http://play.golang.org page, input a
-// short program, run it, and inspect its output.
-//
-// If you want to actually run this example:
-//
-//   1. Ensure the file paths at the top of the function are correct.
-//   2. Remove the word "Example" from the comment at the bottom of the
-//      function.
-//   3. Run:
-//      go test -test.run=Example$ github.com/tebeka/selenium
-func Example() {
-	// Start a Selenium WebDriver server instance (if one is not already
-	// running).
+func ScrapeSkywireNodes() []node.Node {
 	const (
-		// These paths will be different on your system.
 		seleniumPath    = "/home/maxwell/go/src/github.com/tebeka/selenium/vendor/selenium-server-standalone-3.8.1.jar"
 		geckoDriverPath = "/home/maxwell/go/src/github.com/tebeka/selenium/vendor/geckodriver-v0.19.1-linux64"
 		port            = 8080
@@ -30,9 +18,9 @@ func Example() {
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(),           // Start an X frame buffer for the browser to run in.
 		selenium.GeckoDriver(geckoDriverPath), // Specify the path to GeckoDriver in order to use Firefox.
-		selenium.Output(os.Stderr),            // Output debug information to STDERR.
+		//selenium.Output(ioutil.Discard),       // Output debug information to STDERR.
 	}
-	selenium.SetDebug(true)
+	selenium.SetDebug(false)
 	service, err := selenium.NewSeleniumService(seleniumPath, port, opts...)
 	if err != nil {
 		panic(err) // panic is used only as an example and is not otherwise recommended.
@@ -69,16 +57,15 @@ func Example() {
 		panic(err)
 	}
 
+	var nodeList []node.Node
+
 	for _, element := range tbl {
 		e_string, err := element.Text()
 		if err != nil {
 			panic(err)
 		}
 		// Get the public key
-		fmt.Printf("%s\n", e_string)
+		nodeList = append(nodeList, node.Node{e_string, time.Now()})
 	}
-}
-
-func main() {
-	Example()
+	return nodeList
 }
