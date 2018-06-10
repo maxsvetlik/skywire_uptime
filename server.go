@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"io"
@@ -30,7 +29,7 @@ type BasePageStruct struct {
 	Message  string
 }
 type NodeRequest struct {
-	PublicKey string `json:"publickey" form:"publickey" query:"publickey"`
+	PublicKey string `form:"publicKey"`
 }
 
 type Template struct {
@@ -43,19 +42,27 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 
 func HomeHandler(c echo.Context) error {
 	homePage := BasePageStruct{HomePage, false, ""}
+	r := c.Request()
+	URI := r.RequestURI
+	//trim the /? characters from URI
+	URI = URI[2:]
+
+	//TODO remove first two characters
+	//TODO query db
+	//TODO print stats
+
 	return c.Render(http.StatusOK, "base-vcenter", homePage)
 }
 func NodeRequestHandler(c echo.Context) error {
+	r := c.Request()
+	r.ParseForm()
 	n := new(NodeRequest)
 
-	//if err = c.Bind(n); err != nil {
-	//	return
-	//}
+	if err := c.Bind(n); err != nil {
+		return err
+	}
 
-	publicKey := c.FormValue("publicKey")
-	fmt.Printf("%s\n", publicKey)
-	fmt.Printf("%s\n", publicKey)
-	fmt.Printf("%s\n", publicKey)
+	//publicKey := c.FormValue("publicKey")
 
 	//homePage := BasePageStruct{HomePage, false, ""}
 	//return c.Render(http.StatusOK, "base-vcenter", homePage)
@@ -89,8 +96,8 @@ func main() {
 	//defer dbc.Close()
 
 	e.Renderer = t
+	e.POST("/search", NodeRequestHandler)
 	e.GET("/", HomeHandler)
-	e.POST("/nodesearch", NodeRequestHandler)
 	e.Logger.Fatal(e.Start(":8080"))
 	//fmt.Printf("%v+", scrape.ScrapeSkywireNodes())
 }

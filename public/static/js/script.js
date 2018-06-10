@@ -1,20 +1,16 @@
-
 $("#key-submission").submit(function (e) {
   e.preventDefault();
+  console.log("Method")
   publicKey = document.getElementById('public_key_input').value;
 
   $.ajax({
-    url: '/nodesearch',
+    url: '/search',
     type: 'POST',
     data: {
       'publicKey': publicKey,
     },
     success: function(result) {
-      if (result.startsWith("Error")) {
-        error_modal("Oh boy...", result);
-      } else {
-        location.href='/node?msg=searching';
-      }
+      location.href="/?" + publicKey.replace(/\s+/, "") 
     }
   })
 });
