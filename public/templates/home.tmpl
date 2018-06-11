@@ -25,8 +25,20 @@
               <i class="material-icons right">send</i>
           </button>
        </form>
-   </div>
+      </div>
     </div>
+    {{if .IsSearching}}
+        <div class="row valign-wrapper center-box">
+            <p> <b>Stats for public key</b> {{.PublicKey}}</p>
+        </div>
+        <div class="row valign-wrapper center-box">
+            <p> <b>First time seen</b> {{.FirstTimeSeen}} </p>
+        </div>
+        <div class="row valign-wrapper center-box">
+            <p> <b>Average uptime to date</b> {{.AvgTotalUptime}} </p>
+        </div>
+    {{end}}
+
 
 </div>
 {{ end }}

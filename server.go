@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"text/template"
+	"time"
 	//db "skywire_uptime/database"
 	//scrape "skywire_uptime/scrape"
 )
@@ -24,9 +25,12 @@ const (
 
 // BasePageStruct is passed to the home page rendering engine
 type BasePageStruct struct {
-	Page     WhichPage
-	LoggedIn bool
-	Message  string
+	Page           WhichPage
+	IsSearching    bool
+	PublicKey      string
+	FirstTimeSeen  time.Time
+	AvgTotalUptime string
+	Message        string
 }
 type NodeRequest struct {
 	PublicKey string `form:"publicKey"`
@@ -41,13 +45,19 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 }
 
 func HomeHandler(c echo.Context) error {
-	homePage := BasePageStruct{HomePage, false, ""}
+	homePage := BasePageStruct{HomePage, false, "", time.Now(), "0", ""}
 	r := c.Request()
 	URI := r.RequestURI
-	//trim the /? characters from URI
-	URI = URI[2:]
 
-	//TODO remove first two characters
+	if len(URI) > 65 {
+		//trim the /? characters from URI
+		URI = URI[2:]
+		homePage.IsSearching = true
+		homePage.PublicKey = URI
+		homePage.FirstTimeSeen = time.Now()
+		homePage.AvgTotalUptime = "100%"
+
+	}
 	//TODO query db
 	//TODO print stats
 
