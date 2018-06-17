@@ -10,14 +10,6 @@ import (
 var db *DbConn
 var dbName = "test.db"
 
-/*
-func TestGetBadUser(t *testing.T) {
-	_, err := db.GetNodeByKey("bad")
-	if err != nil {
-		t.Error("Failed to fail get non-existant user")
-	}
-}*/
-
 func TestInsertAndGetUser(t *testing.T) {
 	pubKey := "C54ED949CF3DA7CD1C48A01456586C09FBEFE11C4A6F47157C24CF8BE0F6315C76"
 	timeFirst := time.Now()
@@ -74,6 +66,33 @@ func TestUpdate(t *testing.T) {
 	if userUpdated.TimesSeen-user.TimesSeen != 1 {
 		t.Error("Changes not reflected in updated node.")
 	}
+}
+
+// ---------------------------------------------------------------------
+// Test SEARCH table
+// ---------------------------------------------------------------------
+func TestSearchInsert(t *testing.T) {
+	_, err := db.InsertSearch(500, time.Now())
+	if err != nil {
+		t.Error("Failed to insert Search")
+	}
+}
+
+func TestSearchGetLast(t *testing.T) {
+	//Need at least 2 rows
+	_, err := db.InsertSearch(123, time.Now())
+	if err != nil {
+		t.Error("Failed to insert Search")
+	}
+
+	search, err := db.GetLastSearch()
+	if err != nil {
+		t.Error("Failed to get last search")
+	}
+	if search.NumNodesOnline != 123 {
+		t.Error("Last search data mismatch")
+	}
+
 }
 
 func TestMain(m *testing.M) {

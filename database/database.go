@@ -28,6 +28,12 @@ type Node struct {
 	TimesSeen int64
 }
 
+type Search struct {
+	SearchID       int
+	NumNodesOnline int
+	Timestamp      time.Time
+}
+
 // ConnectDB connects to the databse and return a connection object
 func ConnectDB(dbName string) *DbConn {
 	db, err := sql.Open("sqlite3", dbName+"?parseTime=true")
@@ -56,6 +62,43 @@ func (dbc *DbConn) InsertNode(public_key string, first_seen time.Time, last_seen
 	checkError(err, "Failed to commit tasks update transaction")
 
 	return &Node{public_key, first_seen, last_seen, times_seen}
+}
+
+// Inserts a new row for network statistics
+func (dbc *DbConn) InsertSearch(num_nodes int, timestamp time.Time) (*Search, error) {
+	tx, err := dbc.db.Begin()
+	checkError(err, "Failed to create transaction")
+	defer tx.Rollback() // in case the tx couldn't get committed
+
+	nodeAdd, err := tx.Prepare("INSERT INTO search(num_online_nodes, timestamp) VALUES (?,?)")
+	checkError(err, "Failed to prepare user statement")
+	defer nodeAdd.Close()
+
+	_, err = nodeAdd.Exec(num_nodes, timestamp)
+	checkError(err, "Failed to execute user statement")
+
+	// commit transaction
+	err = tx.Commit()
+	checkError(err, "Failed to commit tasks update transaction")
+
+	return &Search{-1, num_nodes, timestamp}, nil
+
+}
+
+// Gets the last search inserted for front page stats
+func (dbc *DbConn) GetLastSearch() (*Search, error) {
+	row := dbc.db.QueryRow("SELECT * FROM search ORDER BY search_id DESC LIMIT 1")
+	s := &Search{}
+	err := row.Scan(&s.SearchID, &s.NumNodesOnline, &s.Timestamp)
+	if err == sql.ErrNoRows {
+		return s, ErrNodeNotFound
+	} else if err != nil {
+		log.Printf("Failed to scan search get query for last entry.")
+		log.Println(err)
+		return s, err
+	}
+
+	return s, nil
 }
 
 // GetNodeByKey will get a node's data using its private key
@@ -106,7 +149,15 @@ func (dbc *DbConn) SetupDb() {
 	'last_seen' TIMESTAMP NULL,
 	'times_seen' BIGINT NULL
 );`
+
+	createSearchCmd := `CREATE TABLE 'search' (
+	'search_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	'num_online_nodes' INTEGER, 
+	'timestamp' TIMESTAMP
+);`
+
 	dbc.createTable(createNodesCmd)
+	dbc.createTable(createSearchCmd)
 }
 
 func (dbc *DbConn) createTable(cmd string) {
