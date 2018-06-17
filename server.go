@@ -3,13 +3,13 @@ package main
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"io"
 	"net/http"
+	db "skywire_uptime/database"
 	"text/template"
-	"time"
-	//db "skywire_uptime/database"
 	//scrape "skywire_uptime/scrape"
 )
 
@@ -28,8 +28,9 @@ type BasePageStruct struct {
 	Page           WhichPage
 	IsSearching    bool
 	PublicKey      string
-	FirstTimeSeen  time.Time
+	FirstTimeSeen  string
 	AvgTotalUptime string
+	CurrentStatus  string
 	Message        string
 }
 type NodeRequest struct {
@@ -44,22 +45,45 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 	return t.templates.ExecuteTemplate(w, name, data)
 }
 
+var dbc *db.DbConn
+var dbFile = "testing"
+
 func HomeHandler(c echo.Context) error {
-	homePage := BasePageStruct{HomePage, false, "", time.Now(), "0", ""}
+	homePage := BasePageStruct{HomePage, false, "", "Now", "0", "Online", ""}
 	r := c.Request()
 	URI := r.RequestURI
-
-	if len(URI) > 65 {
+	if len(URI) > 1 {
 		//trim the /? characters from URI
 		URI = URI[2:]
-		homePage.IsSearching = true
-		homePage.PublicKey = URI
-		homePage.FirstTimeSeen = time.Now()
-		homePage.AvgTotalUptime = "100%"
 
+		if len(URI) > 3 {
+			homePage.IsSearching = true
+			//homePage.PublicKey = URI
+			//homePage.FirstTimeSeen = time.Now()
+			//homePage.AvgTotalUptime = "100%"
+			//homePage.CurrentStatus = "Online"
+			reqNode, err := dbc.GetNodeByKey(URI)
+			if err == db.ErrNodeNotFound {
+				homePage.PublicKey = URI
+				homePage.FirstTimeSeen = "N/A"
+				homePage.AvgTotalUptime = "N/A"
+				homePage.CurrentStatus = "Node not found"
+				fmt.Printf("No node found \n")
+			} else {
+				homePage.PublicKey = URI
+				fts := reqNode.FirstSeen
+				year, month, day := fts.Date()
+				homePage.FirstTimeSeen = month.String() + "/" + string(day) + "/" + string(year)
+				homePage.CurrentStatus = "Not yet implemented"  //TODO
+				homePage.AvgTotalUptime = "Not yet implemented" //TODO
+			}
+		} else {
+			homePage.PublicKey = URI
+			homePage.FirstTimeSeen = "N/A"
+			homePage.AvgTotalUptime = "N/A"
+			homePage.CurrentStatus = "Public key misformed"
+		}
 	}
-	//TODO query db
-	//TODO print stats
 
 	return c.Render(http.StatusOK, "base-vcenter", homePage)
 }
@@ -71,11 +95,6 @@ func NodeRequestHandler(c echo.Context) error {
 	if err := c.Bind(n); err != nil {
 		return err
 	}
-
-	//publicKey := c.FormValue("publicKey")
-
-	//homePage := BasePageStruct{HomePage, false, ""}
-	//return c.Render(http.StatusOK, "base-vcenter", homePage)
 	return c.JSON(http.StatusOK, n)
 }
 
@@ -102,8 +121,8 @@ func main() {
 	}
 
 	// Open database
-	//dbc = db.ConnectDB(dbFile)
-	//defer dbc.Close()
+	dbc = db.ConnectDB(dbFile)
+	defer dbc.Close()
 
 	e.Renderer = t
 	e.POST("/search", NodeRequestHandler)
