@@ -14,3 +14,8 @@ $("#key-submission").submit(function (e) {
     }
   })
 });
+
+
+$(document).ready(function(){
+  $('.tooltipped').tooltip();
+});
