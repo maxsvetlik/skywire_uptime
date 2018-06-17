@@ -10,11 +10,7 @@ import (
 	_ "github.com/mattn/go-sqlite3" // use sqllite3 as the database
 )
 
-var defaultStartTime, _ = time.Parse("15:04", "09:00")
-var defaultEndTime, _ = time.Parse("15:04", "22:00")
-var defaultBlockTime = 30
-
-var ErrNodeNotFound = errors.New("User not found")
+var ErrNodeNotFound = errors.New("Node not found")
 
 // DbConn stores the currently active database connection
 type DbConn struct {
@@ -44,44 +40,70 @@ func ConnectDB(dbName string) *DbConn {
 }
 
 // InsertNode will create a new user by inserting them into the users and tasks tables
-func (dbc *DbConn) InsertNode(public_key string, first_seen time.Time, last_seen time.Time, times_seen int64) *Node {
-
+func (dbc *DbConn) InsertNode(public_key string, first_seen time.Time, last_seen time.Time, times_seen int64) (*Node, error) {
+	var return_error error
 	tx, err := dbc.db.Begin()
 	checkError(err, "Failed to create transaction")
+	if err != nil {
+		return_error = err
+	}
+
 	defer tx.Rollback() // in case the tx couldn't get committed
 
 	nodeAdd, err := tx.Prepare("INSERT INTO nodes(public_key, first_seen, last_seen, times_seen) VALUES (?,?,?,?)")
 	checkError(err, "Failed to prepare user statement")
+	if err != nil {
+		return_error = err
+	}
 	defer nodeAdd.Close()
 
 	_, err = nodeAdd.Exec(public_key, first_seen, last_seen, times_seen)
 	checkError(err, "Failed to execute user statement")
+	if err != nil {
+		return_error = err
+	}
 
 	// commit transaction
 	err = tx.Commit()
 	checkError(err, "Failed to commit tasks update transaction")
+	if err != nil {
+		return_error = err
+	}
 
-	return &Node{public_key, first_seen, last_seen, times_seen}
+	return &Node{public_key, first_seen, last_seen, times_seen}, return_error
 }
 
 // Inserts a new row for network statistics
 func (dbc *DbConn) InsertSearch(num_nodes int, timestamp time.Time) (*Search, error) {
+	var return_error error
 	tx, err := dbc.db.Begin()
 	checkError(err, "Failed to create transaction")
+	if err != nil {
+		return_error = err
+	}
 	defer tx.Rollback() // in case the tx couldn't get committed
 
 	nodeAdd, err := tx.Prepare("INSERT INTO search(num_online_nodes, timestamp) VALUES (?,?)")
 	checkError(err, "Failed to prepare user statement")
+	if err != nil {
+		return_error = err
+	}
 	defer nodeAdd.Close()
 
 	_, err = nodeAdd.Exec(num_nodes, timestamp)
 	checkError(err, "Failed to execute user statement")
+	if err != nil {
+		return_error = err
+	}
 
 	// commit transaction
 	err = tx.Commit()
 	checkError(err, "Failed to commit tasks update transaction")
+	if err != nil {
+		return_error = err
+	}
 
-	return &Search{-1, num_nodes, timestamp}, nil
+	return &Search{-1, num_nodes, timestamp}, return_error
 
 }
 

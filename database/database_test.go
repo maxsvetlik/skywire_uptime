@@ -8,7 +8,7 @@ import (
 )
 
 var db *DbConn
-var dbName = "test.db"
+var dbName = "testing.db"
 
 func TestInsertAndGetUser(t *testing.T) {
 	pubKey := "C54ED949CF3DA7CD1C48A01456586C09FBEFE11C4A6F47157C24CF8BE0F6315C76"

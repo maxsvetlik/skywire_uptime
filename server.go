@@ -9,8 +9,9 @@ import (
 	"io"
 	"net/http"
 	db "skywire_uptime/database"
+	scrape "skywire_uptime/scrape"
 	"text/template"
-	//scrape "skywire_uptime/scrape"
+	"time"
 )
 
 // WhichPage type represents which page the templating engine is rendering
@@ -46,7 +47,7 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 }
 
 var dbc *db.DbConn
-var dbFile = "testing"
+var dbFile = "./database/testing.db"
 
 func HomeHandler(c echo.Context) error {
 	homePage := BasePageStruct{HomePage, false, "", "Now", "0", "Online", ""}
@@ -104,9 +105,24 @@ func randToken() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
+func scrapeOnTimer(db *db.DbConn) {
+	delay := 10 * time.Minute
+	stop := make(chan bool)
+	for {
+		err := scrape.QueryNetworkToDB(db)
+		if err != nil {
+			return
+		}
+		select {
+		case <-time.After(delay):
+		case <-stop:
+			return
+		}
+	}
+}
+
 func main() {
 	e := echo.New()
-
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -127,6 +143,10 @@ func main() {
 	e.Renderer = t
 	e.POST("/search", NodeRequestHandler)
 	e.GET("/", HomeHandler)
-	e.Logger.Fatal(e.Start(":8080"))
+	//go e.Logger.Fatal(e.Start(":8080"))
 	//fmt.Printf("%v+", scrape.ScrapeSkywireNodes())
+	err := scrape.QueryNetworkToDB(dbc)
+	if err != nil {
+		fmt.Printf("Issue adding to db")
+	}
 }
