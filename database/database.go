@@ -123,6 +123,24 @@ func (dbc *DbConn) GetLastSearch() (*Search, error) {
 	return s, nil
 }
 
+//Returns the number of searches since the first indexing of a node
+//Used to calculate total avg uptime
+func (dbc *DbConn) GetPingsSinceCreation(creation_date time.Time) (int, error) {
+	row := dbc.db.QueryRow("SELECT count(*) FROM search where timestamp > ?", creation_date)
+	var pulses int
+	err := row.Scan(&pulses)
+	if err == sql.ErrNoRows {
+		return pulses, ErrNodeNotFound
+	} else if err != nil {
+		log.Printf("Failed to scan search get query for last entry.")
+		log.Println(err)
+		return pulses, err
+	}
+	fmt.Printf("%v\n", pulses)
+	return pulses, nil
+
+}
+
 // GetNodeByKey will get a node's data using its private key
 func (dbc *DbConn) GetNodeByKey(public_key string) (*Node, error) {
 	row := dbc.db.QueryRow("SELECT * FROM nodes WHERE public_key = ?", public_key)

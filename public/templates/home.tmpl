@@ -6,6 +6,8 @@
           <div class="section center-align header-caption">
             <h2 style="font-weight: 20; font-family: Roboto; font-size: 24px">Node statistics for the Skywire Testnet </h2>
             <h3 style="font-size: 16px" class="intro title">Get uptime percentage and other stats for your nodes</h3>
+            <h4 style="font-size: 14px">Nodes online {{.NetworkNodes}} </h4>
+            <h4 style="font-size: 12px">Last update {{.TimeSinceLast}} </h4>
             <!-- <a class="waves-effect waves-light btn" href="/auth" >Login</a> -->
           </div>
       </div>
@@ -32,6 +34,8 @@
             <p> <b>Stats for public key</b> {{.PublicKey}}</p>
         </div>
         <div class="row valign-wrapper center-box">
+            <p> <b>Current status</b> {{.CurrentStatus}} </p>
+        </div><div class="row valign-wrapper center-box">
             <p> <b>First time seen</b> {{.FirstTimeSeen}} </p>
         </div>
         <div class="row valign-wrapper center-box">

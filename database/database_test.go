@@ -107,7 +107,7 @@ func TestMain(m *testing.M) {
 	db.SetupDb()
 
 	// delete the database after all tests
-	defer os.Remove(dbName)
+	//defer os.Remove(dbName)
 
 	// run the tests
 	os.Exit(m.Run())

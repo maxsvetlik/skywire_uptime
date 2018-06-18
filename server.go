@@ -10,6 +10,8 @@ import (
 	"net/http"
 	db "skywire_uptime/database"
 	scrape "skywire_uptime/scrape"
+	"strconv"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -32,6 +34,8 @@ type BasePageStruct struct {
 	FirstTimeSeen  string
 	AvgTotalUptime string
 	CurrentStatus  string
+	NetworkNodes   string
+	TimeSinceLast  string
 	Message        string
 }
 type NodeRequest struct {
@@ -49,34 +53,61 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 var dbc *db.DbConn
 var dbFile = "./database/testing.db"
 
+func fmtDuration(d time.Duration) string {
+	d = d.Round(time.Minute)
+	h := d / time.Hour
+	d -= h * time.Hour
+	m := d / time.Minute
+	return fmt.Sprintf("%02d hr %02d min ago", h, m)
+}
+
 func HomeHandler(c echo.Context) error {
-	homePage := BasePageStruct{HomePage, false, "", "Now", "0", "Online", ""}
+	homePage := BasePageStruct{HomePage, false, "", "Now", "0", "Online", "0", "unknown", ""}
 	r := c.Request()
 	URI := r.RequestURI
+	search, search_err := dbc.GetLastSearch()
+	if search_err == nil {
+		homePage.NetworkNodes = strconv.Itoa(search.NumNodesOnline)
+		homePage.TimeSinceLast = fmtDuration(time.Now().Sub(search.Timestamp))
+	}
 	if len(URI) > 1 {
 		//trim the /? characters from URI
 		URI = URI[2:]
 
 		if len(URI) > 3 {
 			homePage.IsSearching = true
-			//homePage.PublicKey = URI
-			//homePage.FirstTimeSeen = time.Now()
-			//homePage.AvgTotalUptime = "100%"
-			//homePage.CurrentStatus = "Online"
-			reqNode, err := dbc.GetNodeByKey(URI)
+			reqNode, err := dbc.GetNodeByKey(strings.ToLower(URI))
+			search, search_err := dbc.GetLastSearch()
 			if err == db.ErrNodeNotFound {
 				homePage.PublicKey = URI
-				homePage.FirstTimeSeen = "N/A"
-				homePage.AvgTotalUptime = "N/A"
-				homePage.CurrentStatus = "Node not found"
-				fmt.Printf("No node found \n")
+				homePage.FirstTimeSeen = "No data"
+				homePage.AvgTotalUptime = "No data"
+				homePage.CurrentStatus = "Offline"
 			} else {
 				homePage.PublicKey = URI
 				fts := reqNode.FirstSeen
-				year, month, day := fts.Date()
-				homePage.FirstTimeSeen = month.String() + "/" + string(day) + "/" + string(year)
+				homePage.FirstTimeSeen = fts.Format("2006-01-02")
 				homePage.CurrentStatus = "Not yet implemented"  //TODO
 				homePage.AvgTotalUptime = "Not yet implemented" //TODO
+
+				// Get last search time
+				if search_err == nil {
+					time_diff := search.Timestamp.Sub(reqNode.LastSeen)
+					if time_diff <= 600 {
+						homePage.CurrentStatus = "Online"
+					} else {
+						homePage.CurrentStatus = "Offline"
+					}
+
+					totalPulses, err := dbc.GetPingsSinceCreation(reqNode.FirstSeen)
+					if err == nil {
+						total := 100.0
+						if totalPulses > 0 {
+							total = (float64(reqNode.TimesSeen) / float64(totalPulses)) * 100.0
+						}
+						homePage.AvgTotalUptime = strconv.FormatFloat(total, 'f', -1, 64) + "%"
+					}
+				}
 			}
 		} else {
 			homePage.PublicKey = URI
@@ -143,10 +174,10 @@ func main() {
 	e.Renderer = t
 	e.POST("/search", NodeRequestHandler)
 	e.GET("/", HomeHandler)
-	//go e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.Start(":8080"))
 	//fmt.Printf("%v+", scrape.ScrapeSkywireNodes())
-	err := scrape.QueryNetworkToDB(dbc)
-	if err != nil {
-		fmt.Printf("Issue adding to db")
-	}
+	//err := scrape.QueryNetworkToDB(dbc)
+	//if err != nil {
+	//	fmt.Printf("Issue adding to db")
+	//}
 }

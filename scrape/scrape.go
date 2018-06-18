@@ -2,8 +2,6 @@ package scrape
 
 import (
 	"fmt"
-	//"io/ioutil"
-	"database/sql"
 	"github.com/tebeka/selenium"
 	db "skywire_uptime/database"
 	"time"
@@ -91,7 +89,7 @@ func QueryNetworkToDB(dbc *db.DbConn) error {
 	for _, nodelet := range nodeList {
 		//if node doesn't exist
 		_, err := dbc.GetNodeByKey(nodelet)
-		if err == sql.ErrNoRows {
+		if err == db.ErrNodeNotFound {
 			_, err := dbc.InsertNode(nodelet, now, now, 1)
 			if err != nil {
 				fmt.Printf("Error inserting scraped public key into db: %v\n", err)
