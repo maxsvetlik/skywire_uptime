@@ -3,16 +3,17 @@ package scrape
 import (
 	"fmt"
 	"github.com/tebeka/selenium"
+	"log"
 	db "skywire_uptime/database"
 	"time"
 )
 
 func ScrapeSkywireNodes() []string {
-	fmt.Printf("Beginning Skywire scrape")
+	log.Printf("Beginning Skywire scrape for database update.\n")
 	const (
 		seleniumPath    = "/home/maxwell/go/src/github.com/tebeka/selenium/vendor/selenium-server-standalone-3.8.1.jar"
 		geckoDriverPath = "/home/maxwell/go/src/github.com/tebeka/selenium/vendor/geckodriver-v0.19.1-linux64"
-		port            = 8080
+		port            = 8085
 	)
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(),           // Start an X frame buffer for the browser to run in.
@@ -61,7 +62,7 @@ func ScrapeSkywireNodes() []string {
 	}
 
 	var nodeList []string
-	fmt.Printf("Starting key collection")
+	log.Printf("Received skywire page. Starting key collection. \n")
 	for _, element := range tbl {
 		e_string, err := element.Text()
 		if err != nil {
@@ -77,14 +78,6 @@ func ScrapeSkywireNodes() []string {
 func QueryNetworkToDB(dbc *db.DbConn) error {
 	nodeList := ScrapeSkywireNodes()
 
-	// If search was succesful, add to search database
-	_, err := dbc.InsertSearch(len(nodeList), time.Now())
-
-	if err != nil {
-		fmt.Printf("Error inserting search into db")
-		return err
-	}
-
 	now := time.Now()
 	for _, nodelet := range nodeList {
 		//if node doesn't exist
@@ -92,16 +85,23 @@ func QueryNetworkToDB(dbc *db.DbConn) error {
 		if err == db.ErrNodeNotFound {
 			_, err := dbc.InsertNode(nodelet, now, now, 1)
 			if err != nil {
-				fmt.Printf("Error inserting scraped public key into db: %v\n", err)
+				log.Printf("Error inserting scraped public key into db: %v\n", err)
 			}
 		} else {
 			//if node exists
 			err := dbc.UpdateNode(nodelet, time.Now())
 			if err != nil {
-				fmt.Printf("Error updating scraped public key into db.\n")
+				log.Printf("Error updating scraped public key into db.\n")
 			}
 		}
 	}
 
+	// If search was succesful, add to search database
+	_, err := dbc.InsertSearch(len(nodeList), time.Now())
+
+	if err != nil {
+		log.Printf("Error inserting search into db")
+		return err
+	}
 	return nil
 }

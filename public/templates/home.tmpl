@@ -30,16 +30,19 @@
       </div>
     </div>
     {{if .IsSearching}}
-        <div class="row valign-wrapper center-box">
+        <!--<div class="row valign-wrapper center-box">
             <p> <b>Stats for public key</b> {{.PublicKey}}</p>
-        </div>
-        <div class="row valign-wrapper center-box">
-            <p> <b>Current status</b> {{.CurrentStatus}} </p>
-        </div><div class="row valign-wrapper center-box">
-            <p> <b>First time seen</b> {{.FirstTimeSeen}} </p>
-        </div>
-        <div class="row valign-wrapper center-box">
-            <p> <b>Average uptime to date</b> {{.AvgTotalUptime}} </p>
+        </div>-->
+        <div class="row">
+            <div class="col s4 valign-wrapper center-box">
+                <p> <b>Last seen</b> {{.CurrentStatus}} </p>
+            </div>
+            <div class="col s4 valign-wrapper center-box">
+                <p> <b>First time seen</b> {{.FirstTimeSeen}} </p>
+            </div>
+            <div class="col s4 valign-wrapper center-box">
+                <p> <b>Average uptime to date</b> {{.AvgTotalUptime}} </p>
+            </div>
         </div>
     {{end}}
 

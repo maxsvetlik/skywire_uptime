@@ -6,8 +6,12 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/robfig/cron"
 	"io"
+	"log"
+	"math"
 	"net/http"
+	"runtime"
 	db "skywire_uptime/database"
 	scrape "skywire_uptime/scrape"
 	"strconv"
@@ -51,6 +55,7 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 }
 
 var dbc *db.DbConn
+var dbc_r *db.DbConn
 var dbFile = "./database/testing.db"
 
 func fmtDuration(d time.Duration) string {
@@ -63,9 +68,10 @@ func fmtDuration(d time.Duration) string {
 
 func HomeHandler(c echo.Context) error {
 	homePage := BasePageStruct{HomePage, false, "", "Now", "0", "Online", "0", "unknown", ""}
+
 	r := c.Request()
 	URI := r.RequestURI
-	search, search_err := dbc.GetLastSearch()
+	search, search_err := dbc_r.GetLastSearch()
 	if search_err == nil {
 		homePage.NetworkNodes = strconv.Itoa(search.NumNodesOnline)
 		homePage.TimeSinceLast = fmtDuration(time.Now().Sub(search.Timestamp))
@@ -76,8 +82,8 @@ func HomeHandler(c echo.Context) error {
 
 		if len(URI) > 3 {
 			homePage.IsSearching = true
-			reqNode, err := dbc.GetNodeByKey(strings.ToLower(URI))
-			search, search_err := dbc.GetLastSearch()
+			reqNode, err := dbc_r.GetNodeByKey(strings.ToLower(URI))
+			search, search_err := dbc_r.GetLastSearch()
 			if err == db.ErrNodeNotFound {
 				homePage.PublicKey = URI
 				homePage.FirstTimeSeen = "No data"
@@ -87,23 +93,24 @@ func HomeHandler(c echo.Context) error {
 				homePage.PublicKey = URI
 				fts := reqNode.FirstSeen
 				homePage.FirstTimeSeen = fts.Format("2006-01-02")
-				homePage.CurrentStatus = "Not yet implemented"  //TODO
-				homePage.AvgTotalUptime = "Not yet implemented" //TODO
+				homePage.CurrentStatus = "Not yet implemented"
+				homePage.AvgTotalUptime = "Not yet implemented"
 
 				// Get last search time
 				if search_err == nil {
 					time_diff := search.Timestamp.Sub(reqNode.LastSeen)
-					if time_diff <= 600 {
-						homePage.CurrentStatus = "Online"
-					} else {
-						homePage.CurrentStatus = "Offline"
-					}
+					homePage.CurrentStatus = fmtDuration(time_diff)
 
-					totalPulses, err := dbc.GetPingsSinceCreation(reqNode.FirstSeen)
+					totalPulses, err := dbc_r.GetPingsSinceCreation(reqNode.FirstSeen)
 					if err == nil {
 						total := 100.0
 						if totalPulses > 0 {
 							total = (float64(reqNode.TimesSeen) / float64(totalPulses)) * 100.0
+							if total > 100.0 {
+								total = 100.0
+							} else {
+								total = math.Round(total*100) / 100
+							}
 						}
 						homePage.AvgTotalUptime = strconv.FormatFloat(total, 'f', -1, 64) + "%"
 					}
@@ -136,9 +143,18 @@ func randToken() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
+func scrapeAndCheck() {
+	log.Printf("Entering NodeUpdate loop!\n")
+	err := scrape.QueryNetworkToDB(dbc)
+	if err != nil {
+		log.Printf("Error returning from QueryNetwork\n")
+	}
+	log.Printf("Leaving NodeUpdate loop!\n")
+}
 func scrapeOnTimer(db *db.DbConn) {
-	delay := 10 * time.Minute
+	delay := 1 * time.Minute
 	stop := make(chan bool)
+	log.Printf("Entering NodeUpdate loop!\n")
 	for {
 		err := scrape.QueryNetworkToDB(db)
 		if err != nil {
@@ -150,13 +166,14 @@ func scrapeOnTimer(db *db.DbConn) {
 			return
 		}
 	}
+	log.Printf("Leaving NodeUpdate loop!\n")
 }
 
 func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-
+	runtime.GOMAXPROCS(2)
 	e.Static("/", "public")
 
 	t := &Template{
@@ -169,13 +186,20 @@ func main() {
 
 	// Open database
 	dbc = db.ConnectDB(dbFile)
+	dbc_r = db.ConnectDB(dbFile)
 	defer dbc.Close()
+	defer dbc_r.Close()
 
 	e.Renderer = t
 	e.POST("/search", NodeRequestHandler)
 	e.GET("/", HomeHandler)
+
+	c := cron.New()
+	c.AddFunc("@every 3m", scrapeAndCheck)
+	c.Start()
+
 	e.Logger.Fatal(e.Start(":8080"))
-	//fmt.Printf("%v+", scrape.ScrapeSkywireNodes())
+	//scrapeOnTimer(dbc)
 	//err := scrape.QueryNetworkToDB(dbc)
 	//if err != nil {
 	//	fmt.Printf("Issue adding to db")

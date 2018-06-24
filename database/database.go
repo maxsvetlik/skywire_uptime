@@ -32,7 +32,7 @@ type Search struct {
 
 // ConnectDB connects to the databse and return a connection object
 func ConnectDB(dbName string) *DbConn {
-	db, err := sql.Open("sqlite3", dbName+"?parseTime=true")
+	db, err := sql.Open("sqlite3", dbName+"?parseTime=true&_busy_timeout=5000&cache=shared&mode=rwc")
 	checkError(err, "Failed to load database")
 	err = db.Ping()
 	checkError(err, "Failed to ping database")
@@ -136,7 +136,6 @@ func (dbc *DbConn) GetPingsSinceCreation(creation_date time.Time) (int, error) {
 		log.Println(err)
 		return pulses, err
 	}
-	fmt.Printf("%v\n", pulses)
 	return pulses, nil
 
 }
